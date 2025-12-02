@@ -1,0 +1,45 @@
+services:
+  redis:
+    image: redis:8.4.0-alpine
+    container_name: redis-semantic-cache
+    ports:
+      - "6380:6379" # Redis protocol (host:container)
+      - "8001:8001" # RedisInsight (if needed)
+    volumes:
+      - redis_data:/data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server --appendonly yes --maxmemory 2gb --maxmemory-policy allkeys-lru
+    environment:
+      - REDIS_ARGS=--appendonly yes
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - semantic-cache-network
+
+  # Optional: RedisInsight for GUI management
+  redis-insight:
+    image: redis/redisinsight:latest
+    container_name: redis-insight
+    ports:
+      - "5540:5540"
+    volumes:
+      - redis_insight_data:/data
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - semantic-cache-network
+
+volumes:
+  redis_data:
+    driver: local
+  redis_insight_data:
+    driver: local
+
+networks:
+  semantic-cache-network:
+    driver: bridge

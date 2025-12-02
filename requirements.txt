@@ -1,0 +1,5 @@
+sentence-transformers
+redisvl
+python-dotenv
+google-adk
+langchain-google-genai
