@@ -38,18 +38,12 @@ async def basic_example():
         # Check for semantic similarity
         result = await cache.check("Tell me the capital city of France")
         print(f"Semantic match: {result}")
-        
-        # No match
+        # Check for unrelated query (should not match)
         result = await cache.check("What is the weather in London?")
-        print(f"No match: {result}")
-        
-        # Print metrics
-        print("\n" + "-"*70)
-        print("Metrics:")
-        print("-"*70)
-        metrics = cache.get_metrics()
-        for key, value in metrics.items():
-            print(f"{key}: {value}")
+        if not result:
+            print(f"No match (correct): {result}")
+    
+    print("\n✅ Example complete!\n")
 
 
 async def multi_tenancy_example():

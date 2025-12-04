@@ -113,10 +113,8 @@ def get_tracer():
     if not OTEL_AVAILABLE:
         return None
     
-    if _tracer is None:
-        # Auto-initialize with console exporter
-        setup_tracing()
-    
+    # Return existing tracer or None - do NOT auto-initialize
+    # Tracing must be explicitly enabled via setup_tracing()
     return _tracer
 
 
