@@ -8,9 +8,9 @@ from redisvl.utils.rerank import (
     VoyageAIReranker,
 )
 
-from semantic_cache.core.config import RerankerConfig
-from semantic_cache.utils.exceptions import RerankerError
-from semantic_cache.utils.logging import get_logger
+from vertector_semantic_cache.core.config import RerankerConfig
+from vertector_semantic_cache.utils.exceptions import RerankerError
+from vertector_semantic_cache.utils.logging import get_logger
 
 logger = get_logger(__name__)
 

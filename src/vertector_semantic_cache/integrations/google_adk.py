@@ -9,8 +9,8 @@ from google.adk.sessions import InMemorySessionService
 from google.adk import Runner
 from google.genai import types
 
-from semantic_cache.core.cache_manager import AsyncSemanticCacheManager
-from semantic_cache.utils.logging import get_logger
+from vertector_semantic_cache.core.cache_manager import AsyncSemanticCacheManager
+from vertector_semantic_cache.utils.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -27,8 +27,8 @@ class AsyncGoogleADKCachedAgent:
         ```python
         from google.adk.agents import Agent
         from google.adk.apps.app import App
-        from semantic_cache import AsyncSemanticCacheManager, CacheConfig
-        from semantic_cache.integrations import AsyncGoogleADKCachedAgent
+        from vertector_semantic_cache import AsyncSemanticCacheManager, CacheConfig
+        from vertector_semantic_cache.integrations import AsyncGoogleADKCachedAgent
         
         # Setup cache
         cache_config = CacheConfig(redis_url="redis://localhost:6380")

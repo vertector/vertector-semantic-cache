@@ -1,7 +1,7 @@
 import asyncio
 import time
-from semantic_cache import AsyncSemanticCacheManager, CacheConfig, VectorizerConfig
-from semantic_cache.core.config import L1CacheConfig
+from vertector_semantic_cache import AsyncSemanticCacheManager, CacheConfig, VectorizerConfig
+from vertector_semantic_cache.core.config import L1CacheConfig
 
 # Example: User-provided refresh callback
 async def my_llm_refresh_callback(prompt: str, user_id: str = None, context: dict = None) -> str:

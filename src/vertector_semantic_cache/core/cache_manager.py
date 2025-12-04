@@ -8,7 +8,7 @@ from typing import Optional, Dict, Any, List
 from contextlib import asynccontextmanager
 
 try:
-    from semantic_cache.observability.tracing import (
+    from vertector_semantic_cache.observability.tracing import (
         setup_tracing,
         trace_operation,
         add_span_attributes,
@@ -21,17 +21,17 @@ from redisvl.extensions.cache.llm import SemanticCache
 from redisvl.query.filter import Tag, FilterExpression
 from redisvl.utils.rerank import BaseReranker
 
-from semantic_cache.core.config import CacheConfig
-from semantic_cache.core.metrics import CacheMetrics
-from semantic_cache.core.l1_cache import L1Cache, L1CacheEntry
-from semantic_cache.core.tag_manager import TagManager
-from semantic_cache.vectorizers.factory import VectorizerFactory
-from semantic_cache.rerankers.factory import RerankerFactory
-from semantic_cache.utils.exceptions import (
+from vertector_semantic_cache.core.config import CacheConfig
+from vertector_semantic_cache.core.metrics import CacheMetrics
+from vertector_semantic_cache.core.l1_cache import L1Cache, L1CacheEntry
+from vertector_semantic_cache.core.tag_manager import TagManager
+from vertector_semantic_cache.vectorizers.factory import VectorizerFactory
+from vertector_semantic_cache.rerankers.factory import RerankerFactory
+from vertector_semantic_cache.utils.exceptions import (
     CacheConnectionError,
     CacheOperationError,
 )
-from semantic_cache.utils.logging import get_logger, setup_logging
+from vertector_semantic_cache.utils.logging import get_logger, setup_logging
 
 logger = get_logger(__name__)
 
@@ -50,7 +50,7 @@ class AsyncSemanticCacheManager:
     
     Example:
         ```python
-        from semantic_cache import AsyncSemanticCacheManager, CacheConfig
+        from vertector_semantic_cache import AsyncSemanticCacheManager, CacheConfig
         
         config = CacheConfig(redis_url="redis://localhost:6380")
         

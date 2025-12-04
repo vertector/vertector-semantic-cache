@@ -21,8 +21,8 @@ The semantic cache implements a two-tier caching architecture for optimal perfor
 ### Configuration
 
 ```python
-from semantic_cache import CacheConfig
-from semantic_cache.core.config import L1CacheConfig
+from vertector_semantic_cache import CacheConfig
+from vertector_semantic_cache.core.config import L1CacheConfig
 
 config = CacheConfig(
     redis_url="redis://localhost:6380",
@@ -76,8 +76,8 @@ config = CacheConfig(
 
 ```python
 import asyncio
-from semantic_cache import AsyncSemanticCacheManager, CacheConfig
-from semantic_cache.core.config import L1CacheConfig
+from vertector_semantic_cache import AsyncSemanticCacheManager, CacheConfig
+from vertector_semantic_cache.core.config import L1CacheConfig
 
 async def main():
     config = CacheConfig(
@@ -417,7 +417,7 @@ prometheus_metrics = cache.get_metrics_prometheus()
 
 2. **Configure tracing**:
    ```python
-   from semantic_cache.core.config import ObservabilityConfig
+   from vertector_semantic_cache.core.config import ObservabilityConfig
    
    config = CacheConfig(
        observability=ObservabilityConfig(

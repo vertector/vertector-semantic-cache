@@ -6,8 +6,8 @@ from typing import Optional, List, Dict, Any
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage, AIMessage
 from langchain_core.language_models import BaseChatModel
 
-from semantic_cache.core.cache_manager import AsyncSemanticCacheManager
-from semantic_cache.utils.logging import get_logger
+from vertector_semantic_cache.core.cache_manager import AsyncSemanticCacheManager
+from vertector_semantic_cache.utils.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -23,8 +23,8 @@ class AsyncLangChainCachedLLM:
     Example:
         ```python
         from langchain_google_genai import ChatGoogleGenerativeAI
-        from semantic_cache import AsyncSemanticCacheManager, CacheConfig
-        from semantic_cache.integrations import AsyncLangChainCachedLLM
+        from vertector_semantic_cache import AsyncSemanticCacheManager, CacheConfig
+        from vertector_semantic_cache.integrations import AsyncLangChainCachedLLM
         
         # Setup cache
         cache_config = CacheConfig(redis_url="redis://localhost:6380")

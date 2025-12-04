@@ -11,9 +11,9 @@ from redisvl.utils.vectorize import (
     CustomTextVectorizer,
 )
 
-from semantic_cache.core.config import VectorizerConfig
-from semantic_cache.utils.exceptions import VectorizerError
-from semantic_cache.utils.logging import get_logger
+from vertector_semantic_cache.core.config import VectorizerConfig
+from vertector_semantic_cache.utils.exceptions import VectorizerError
+from vertector_semantic_cache.utils.logging import get_logger
 
 logger = get_logger(__name__)
 

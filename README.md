@@ -46,7 +46,7 @@ pip install semantic-cache[all]
 
 ```python
 import asyncio
-from semantic_cache import AsyncSemanticCacheManager, CacheConfig
+from vertector_semantic_cache import AsyncSemanticCacheManager, CacheConfig
 
 async def main():
     # Configure cache
@@ -81,8 +81,8 @@ asyncio.run(main())
 ```python
 import asyncio
 from langchain_google_genai import ChatGoogleGenerativeAI
-from semantic_cache import AsyncSemanticCacheManager, CacheConfig
-from semantic_cache.integrations import AsyncLangChainCachedLLM
+from vertector_semantic_cache import AsyncSemanticCacheManager, CacheConfig
+from vertector_semantic_cache.integrations import AsyncLangChainCachedLLM
 
 async def main():
     # Setup cache
@@ -115,8 +115,8 @@ asyncio.run(main())
 import asyncio
 from google.adk.agents import Agent
 from google.adk.apps.app import App
-from semantic_cache import AsyncSemanticCacheManager, CacheConfig
-from semantic_cache.integrations import AsyncGoogleADKCachedAgent
+from vertector_semantic_cache import AsyncSemanticCacheManager, CacheConfig
+from vertector_semantic_cache.integrations import AsyncGoogleADKCachedAgent
 
 async def main():
     # Setup cache
@@ -161,7 +161,7 @@ SEMANTIC_CACHE_LOG_LEVEL=INFO
 Then use `CacheSettings`:
 
 ```python
-from semantic_cache.core.config import CacheSettings
+from vertector_semantic_cache.core.config import CacheSettings
 
 settings = CacheSettings()
 config = settings.to_cache_config()
@@ -170,7 +170,7 @@ config = settings.to_cache_config()
 ### Vectorizer Configuration
 
 ```python
-from semantic_cache import CacheConfig, VectorizerConfig
+from vertector_semantic_cache import CacheConfig, VectorizerConfig
 
 config = CacheConfig(
     vectorizer=VectorizerConfig(
@@ -184,7 +184,7 @@ config = CacheConfig(
 ### Reranker Configuration
 
 ```python
-from semantic_cache import CacheConfig, RerankerConfig
+from vertector_semantic_cache import CacheConfig, RerankerConfig
 
 config = CacheConfig(
     reranker=RerankerConfig(
@@ -203,8 +203,8 @@ config = CacheConfig(
 Enable in-memory L1 caching for ultra-fast lookups (<1ms vs ~20ms for Redis):
 
 ```python
-from semantic_cache import CacheConfig
-from semantic_cache.core.config import L1CacheConfig
+from vertector_semantic_cache import CacheConfig
+from vertector_semantic_cache.core.config import L1CacheConfig
 
 config = CacheConfig(
     redis_url="redis://localhost:6380",
@@ -373,7 +373,7 @@ prometheus_metrics = cache.get_metrics_prometheus()
 Enable OpenTelemetry tracing for deep observability:
 
 ```python
-from semantic_cache.core.config import ObservabilityConfig
+from vertector_semantic_cache.core.config import ObservabilityConfig
 
 config = CacheConfig(
     observability=ObservabilityConfig(

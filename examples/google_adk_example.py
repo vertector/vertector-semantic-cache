@@ -7,8 +7,8 @@ from google.adk.agents import Agent
 from google.adk.apps.app import App
 from google.adk.tools import google_search
 
-from semantic_cache import AsyncSemanticCacheManager, CacheConfig, VectorizerConfig
-from semantic_cache.integrations import AsyncGoogleADKCachedAgent
+from vertector_semantic_cache import AsyncSemanticCacheManager, CacheConfig, VectorizerConfig
+from vertector_semantic_cache.integrations import AsyncGoogleADKCachedAgent
 
 # Load environment variables
 load_dotenv()

@@ -1,7 +1,7 @@
 import asyncio
 import time
-from semantic_cache import AsyncSemanticCacheManager, CacheConfig, VectorizerConfig
-from semantic_cache.core.config import L1CacheConfig, ObservabilityConfig
+from vertector_semantic_cache import AsyncSemanticCacheManager, CacheConfig, VectorizerConfig
+from vertector_semantic_cache.core.config import L1CacheConfig, ObservabilityConfig
 
 async def main():
     print("\n" + "="*70)

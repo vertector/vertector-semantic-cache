@@ -1,7 +1,7 @@
 """Basic usage example for semantic cache."""
 
 import asyncio
-from semantic_cache import AsyncSemanticCacheManager, CacheConfig, VectorizerConfig, RerankerConfig
+from vertector_semantic_cache import AsyncSemanticCacheManager, CacheConfig, VectorizerConfig, RerankerConfig
 
 
 async def basic_example():

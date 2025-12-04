@@ -12,12 +12,12 @@ A production-ready semantic caching system for AI agents using RedisVL with:
 __version__ = "0.1.0"
 __author__ = "Vertector"
 
-from semantic_cache.core.cache_manager import AsyncSemanticCacheManager
-from semantic_cache.core.config import CacheConfig, VectorizerConfig, RerankerConfig
-from semantic_cache.core.metrics import CacheMetrics
-from semantic_cache.vectorizers.factory import VectorizerFactory
-from semantic_cache.rerankers.factory import RerankerFactory
-from semantic_cache.utils.exceptions import (
+from vertector_semantic_cache.core.cache_manager import AsyncSemanticCacheManager
+from vertector_semantic_cache.core.config import CacheConfig, VectorizerConfig, RerankerConfig
+from vertector_semantic_cache.core.metrics import CacheMetrics
+from vertector_semantic_cache.vectorizers.factory import VectorizerFactory
+from vertector_semantic_cache.rerankers.factory import RerankerFactory
+from vertector_semantic_cache.utils.exceptions import (
     SemanticCacheError,
     CacheConnectionError,
     VectorizerError,

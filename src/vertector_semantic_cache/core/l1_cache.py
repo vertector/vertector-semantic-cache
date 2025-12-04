@@ -3,7 +3,7 @@ from cachetools import LRUCache, LFUCache, TTLCache
 import threading
 from dataclasses import dataclass
 from datetime import datetime
-from semantic_cache.utils.logging import get_logger
+from vertector_semantic_cache.utils.logging import get_logger
 
 logger = get_logger("core.l1_cache")
 

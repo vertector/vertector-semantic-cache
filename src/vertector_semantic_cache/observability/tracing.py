@@ -23,7 +23,7 @@ except ImportError:
     TracerProvider = None
     Span = None
 
-from semantic_cache.utils.logging import get_logger
+from vertector_semantic_cache.utils.logging import get_logger
 
 logger = get_logger("observability.tracing")
 

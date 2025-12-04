@@ -34,7 +34,7 @@ The semantic cache provides comprehensive observability out-of-the-box:
 ### Quick Start
 
 ```python
-from semantic_cache import AsyncSemanticCacheManager, CacheConfig
+from vertector_semantic_cache import AsyncSemanticCacheManager, CacheConfig
 
 async with AsyncSemanticCacheManager(config) as cache:
     # Use cache normally...
@@ -151,7 +151,7 @@ This installs:
 ### Configuration
 
 ```python
-from semantic_cache.core.config import ObservabilityConfig
+from vertector_semantic_cache.core.config import ObservabilityConfig
 
 config = CacheConfig(
     redis_url="redis://localhost:6380",
@@ -270,7 +270,7 @@ Trace: 125ms total
 
 ```python
 from fastapi import FastAPI
-from semantic_cache import AsyncSemanticCacheManager
+from vertector_semantic_cache import AsyncSemanticCacheManager
 
 app = FastAPI()
 cache_manager = AsyncSemanticCacheManager(config)

@@ -74,5 +74,5 @@ def setup_logging(
 
 
 def get_logger(name: str) -> logging.Logger:
-    """Get a logger instance with the semantic_cache prefix."""
-    return logging.getLogger(f"semantic_cache.{name}")
+    """Get a logger instance with the vertector_semantic_cache prefix."""
+    return logging.getLogger(f"vertector_semantic_cache.{name}")

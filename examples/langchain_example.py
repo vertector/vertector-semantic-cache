@@ -3,8 +3,8 @@
 import asyncio
 from langchain_google_genai import ChatGoogleGenerativeAI
 
-from semantic_cache import AsyncSemanticCacheManager, CacheConfig
-from semantic_cache.integrations import AsyncLangChainCachedLLM
+from vertector_semantic_cache import AsyncSemanticCacheManager, CacheConfig
+from vertector_semantic_cache.integrations import AsyncLangChainCachedLLM
 
 
 async def langchain_example():

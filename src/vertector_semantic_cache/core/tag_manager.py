@@ -1,5 +1,5 @@
 from typing import List, Optional
-from semantic_cache.utils.logging import get_logger
+from vertector_semantic_cache.utils.logging import get_logger
 
 logger = get_logger("core.tag_manager")
 
