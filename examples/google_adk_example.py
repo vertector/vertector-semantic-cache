@@ -68,13 +68,7 @@ async def google_adk_example():
             print(f"Response: {response[:150]}...")
             print("-" * 70)
         
-        # Print metrics
-        print("\n" + "="*70)
-        print("Cache Performance Metrics")
-        print("="*70)
-        metrics = cache_manager.get_metrics()
-        for key, value in metrics.items():
-            print(f"{key}: {value}")
+        print("\n✅ Google ADK example complete!\n")
         
         # Cleanup
         await cached_agent.close()
