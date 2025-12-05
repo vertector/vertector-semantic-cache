@@ -1,6 +1,7 @@
 """OpenTelemetry tracing utilities for semantic cache."""
 
 import functools
+import atexit
 from typing import Optional, Callable, Any, Dict
 from contextlib import contextmanager
 
@@ -10,6 +11,7 @@ try:
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import (
         BatchSpanProcessor,
+        SimpleSpanProcessor,
         ConsoleSpanExporter,
     )
     from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
@@ -30,6 +32,26 @@ logger = get_logger("observability.tracing")
 # Global tracer instance
 _tracer: Optional[Any] = None
 _tracer_provider: Optional[Any] = None
+_shutdown_registered: bool = False
+
+
+def shutdown_tracing() -> None:
+    """
+    Shutdown the tracer provider and flush all pending spans.
+    
+    This should be called before application exit to ensure all spans are exported.
+    """
+    global _tracer_provider, _tracer
+    
+    if _tracer_provider is not None:
+        try:
+            _tracer_provider.shutdown()
+            logger.debug("Tracing provider shut down successfully")
+        except Exception as e:
+            logger.warning(f"Error shutting down tracer provider: {e}")
+        finally:
+            _tracer_provider = None
+            _tracer = None
 
 
 def setup_tracing(
@@ -48,12 +70,12 @@ def setup_tracing(
     Returns:
         True if tracing was setup successfully, False otherwise
     """
-    global _tracer, _tracer_provider
+    global _tracer, _tracer_provider, _shutdown_registered
     
     if not OTEL_AVAILABLE:
         logger.warning(
             "OpenTelemetry not installed. Install with: "
-            "pip install semantic-cache[observability]"
+            "pip install vertector-semantic-cache[observability]"
         )
         return False
     
@@ -64,14 +86,19 @@ def setup_tracing(
         # Create tracer provider
         _tracer_provider = TracerProvider(resource=resource)
         
-        # Setup exporter
+        # Setup exporter and processor based on type
         if exporter_type == "console":
+            # Use SimpleSpanProcessor for console to avoid buffering issues
+            # SimpleSpanProcessor exports spans immediately (synchronously)
             exporter = ConsoleSpanExporter()
+            processor = SimpleSpanProcessor(exporter)
         elif exporter_type == "otlp":
+            # Use BatchSpanProcessor for network exporters for efficiency
             exporter = OTLPSpanExporter(
                 endpoint=endpoint or "http://localhost:4317",
                 insecure=True,
             )
+            processor = BatchSpanProcessor(exporter)
         elif exporter_type == "jaeger":
             try:
                 from opentelemetry.exporter.jaeger.thrift import JaegerExporter
@@ -79,6 +106,7 @@ def setup_tracing(
                     agent_host_name=endpoint or "localhost",
                     agent_port=6831,
                 )
+                processor = BatchSpanProcessor(exporter)
             except ImportError:
                 logger.error("Jaeger exporter not available")
                 return False
@@ -87,13 +115,18 @@ def setup_tracing(
             return False
         
         # Add span processor
-        _tracer_provider.add_span_processor(BatchSpanProcessor(exporter))
+        _tracer_provider.add_span_processor(processor)
         
         # Set global tracer provider
         trace.set_tracer_provider(_tracer_provider)
         
         # Get tracer
         _tracer = trace.get_tracer(__name__)
+        
+        # Register shutdown handler to flush spans on exit
+        if not _shutdown_registered:
+            atexit.register(shutdown_tracing)
+            _shutdown_registered = True
         
         logger.info(
             f"Tracing initialized with {exporter_type} exporter "
