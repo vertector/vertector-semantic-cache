@@ -32,10 +32,10 @@ async def langchain_example():
     
     # Test queries
     test_queries = [
-        "What is the capital of France?",
-        "Tell me the capital city of France",  # Semantically similar
-        "What's the weather like in Paris?",
-        "How's the weather in Paris today?",  # Semantically similar
+        "What is the capital of Ghana?",
+        "Tell me the capital city of Ghana",  # Semantically similar
+        "What's the weather like in Accra?",
+        "How's the weather in Accra today?",  # Semantically similar
     ]
     
     async with cache_manager:

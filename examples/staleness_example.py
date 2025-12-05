@@ -35,17 +35,19 @@ async def main():
         print("="*70)
         print("PHASE 1: Fresh Cache Entry")
         print("="*70 + "\n")
-        
-        # Store an entry
-        await cache.store(
-            prompt="What is the capital of France?",
-            response="The capital of France is Paris."
-        )
-        print("✓ Stored: 'What is the capital of France?'\n")
-        
-        # Check immediately (fresh)
-        result = await cache.check("What is the capital of France?")
-        print(f"Immediate check: {result}")
+    # 1. Store initial value
+    print("\n1. Storing initial value...")
+    await cache.store(
+        prompt="What is the capital of Ghana?",
+        response="The capital of Ghana is Accra.",
+        metadata={"source": "wikipedia"}
+    )
+    print("Stored: 'The capital of Ghana is Accra.'")
+
+    # 2. Retrieve (should be a hit)
+    print("\n2. Retrieving (should be a hit)...")
+    result = await cache.check("What is the capital of Ghana?")
+    print(f"Result: {result}")
         print(f"Status: FRESH ✓\n")
         
         print("="*70)

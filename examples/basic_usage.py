@@ -27,16 +27,16 @@ async def basic_example():
     async with AsyncSemanticCacheManager(config) as cache:
         # Store some data
         await cache.store(
-            prompt="What is the capital of France?",
-            response="The capital of France is Paris."
+            prompt="What is the capital of Ghana?",
+            response="The capital of Ghana is Accra."
         )
         
         # Check for exact match
-        result = await cache.check("What is the capital of France?")
+        result = await cache.check("What is the capital of Ghana?")
         print(f"Exact match: {result}")
         
         # Check for semantic similarity
-        result = await cache.check("Tell me the capital city of France")
+        result = await cache.check("Tell me the capital city of Ghana")
         print(f"Semantic match: {result}")
         # Check for unrelated query (should not match)
         result = await cache.check("What is the weather in London?")
