@@ -101,6 +101,10 @@ async def multi_user_example():
     cached_agent = AsyncGoogleADKCachedAgent(cache_manager, agent, app)
     
     async with cache_manager:
+        # Clear any stale data from previous runs
+        await cache_manager.clear()
+        print("Cache cleared.\n")
+        
         # Query 1: Alice asks about Ghana
         print("1. Alice asks: 'What is the capital of Ghana?'")
         response1 = await cached_agent.query(
