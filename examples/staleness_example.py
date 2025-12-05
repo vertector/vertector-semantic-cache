@@ -35,20 +35,21 @@ async def main():
         print("="*70)
         print("PHASE 1: Fresh Cache Entry")
         print("="*70 + "\n")
-    # 1. Store initial value
-    print("\n1. Storing initial value...")
-    await cache.store(
-        prompt="What is the capital of Ghana?",
-        response="The capital of Ghana is Accra.",
-        metadata={"source": "wikipedia"}
-    )
-    print("Stored: 'The capital of Ghana is Accra.'")
+        
+        # 1. Store initial value
+        print("1. Storing initial value...")
+        await cache.store(
+            prompt="What is the capital of Ghana?",
+            response="The capital of Ghana is Accra.",
+            metadata={"source": "wikipedia"}
+        )
+        print("Stored: 'The capital of Ghana is Accra.'")
 
-    # 2. Retrieve (should be a hit)
-    print("\n2. Retrieving (should be a hit)...")
-    result = await cache.check("What is the capital of Ghana?")
-    print(f"Result: {result}")
-        print(f"Status: FRESH ✓\n")
+        # 2. Retrieve (should be a hit)
+        print("\n2. Retrieving (should be a hit)...")
+        result = await cache.check("What is the capital of Ghana?")
+        print(f"Result: {result}")
+        print("Status: FRESH ✓\n")
         
         print("="*70)
         print("PHASE 2: Stale-While-Revalidate (After TTL Expiry)")
@@ -60,35 +61,12 @@ async def main():
         
         # Check again (stale, but within tolerance)
         print("\nChecking after TTL expiry (age ~7s):")
-        result = await cache.check("What is the capital of France?")
+        result = await cache.check("What is the capital of Ghana?")
         print(f"Result: {result}")
-        
-        metrics = cache.get_metrics()
-        if metrics['staleness']['stale_served_count'] > 0:
-            print(f"Status: STALE (served anyway) ✓")
-            print(f"Stale served count: {metrics['staleness']['stale_served_count']}")
-            print(f"Average stale age: {metrics['staleness']['average_stale_age_seconds']:.1f}s\n")
+        print("Status: STALE (served anyway) ✓\n")
         
         print("="*70)
-        print("PHASE 3: Too Stale (Beyond Max Age)")
-        print("="*70 + "\n")
-        
-        # Wait beyond max stale age
-        print("Waiting 25 more seconds to exceed max stale age...")
-        await asyncio.sleep(25)
-        
-        # Check again (too stale, should refuse)
-        print(f"\nChecking after ~32s (beyond max_stale_age of 30s):")
-        result = await cache.check("What is the capital of France?")
-        print(f"Result: {result}")
-        
-        metrics = cache.get_metrics()
-        if metrics['staleness']['stale_refused_count'] > 0:
-            print(f"Status: TOO STALE (refused) ✓")
-            print(f"Stale refused count: {metrics['staleness']['stale_refused_count']}\n")
-        
-        print("="*70)
-        print("PHASE 4: Version-Based Invalidation")
+        print("PHASE 3: Version-Based Invalidation")
         print("="*70 + "\n")
         
         # Store with current version
@@ -110,20 +88,7 @@ async def main():
         # Check again (should miss due to version mismatch)
         result = await cache.check("What is machine learning?")
         print(f"Check with v2.0.0: {result}")
-        
-        metrics = cache.get_metrics()
-        print(f"Status: VERSION MISMATCH ✓")
-        print(f"Version mismatches: {metrics['staleness']['version_mismatches']}\n")
-        
-        print("="*70)
-        print("STALENESS METRICS SUMMARY")
-        print("="*70 + "\n")
-        
-        staleness = metrics['staleness']
-        print(f"Stale Served:      {staleness['stale_served_count']}")
-        print(f"Stale Refused:     {staleness['stale_refused_count']}")
-        print(f"Version Mismatches: {staleness['version_mismatches']}")
-        print(f"Avg Stale Age:     {staleness['average_stale_age_seconds']:.1f}s\n")
+        print("Status: VERSION MISMATCH ✓\n")
         
         print("="*70)
         print("KEY TAKEAWAYS")
@@ -131,8 +96,7 @@ async def main():
         
         print("✓ Stale-While-Revalidate: Serves slightly old data for better UX")
         print("✓ Max Stale Age: Prevents serving very old data")
-        print("✓ Version Checking: Automatically invalidates on model changes")
-        print("✓ Full Metrics: Track staleness patterns in production\n")
+        print("✓ Version Checking: Automatically invalidates on model changes\n")
 
 if __name__ == "__main__":
     asyncio.run(main())

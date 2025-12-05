@@ -48,19 +48,20 @@ async def main():
         print("="*70)
         print("SCENARIO 1: Fresh Entry")
         print("="*70 + "\n")
-    # 1. Store initial value
-    print("\n1. Storing initial value...")
-    await cache.store(
-        prompt="What is the capital of Ghana?",
-        response="The capital of Ghana is Accra.",
-        metadata={"source": "wikipedia"}
-    )
-    print("Stored: 'The capital of Ghana is Accra.'")
+        
+        # 1. Store initial value
+        print("1. Storing initial value...")
+        await cache.store(
+            prompt="What is the capital of Ghana?",
+            response="The capital of Ghana is Accra.",
+            metadata={"source": "wikipedia"}
+        )
+        print("Stored: 'The capital of Ghana is Accra.'")
 
-    # 2. Retrieve (should be a hit)
-    print("\n2. Retrieving (should be a hit)...")
-    result = await cache.check("What is the capital of Ghana?")
-    print(f"Result: {result[:60]}...")
+        # 2. Retrieve (should be a hit)
+        print("\n2. Retrieving (should be a hit)...")
+        result = await cache.check("What is the capital of Ghana?")
+        print(f"Result: {result[:60]}...")
         print("Status: FRESH ✓\n")
         
         print("="*70)
@@ -72,7 +73,7 @@ async def main():
         await asyncio.sleep(5)
         
         print("\nChecking stale entry (age ~5s):")
-        result = await cache.check("What is the capital of France?")
+        result = await cache.check("What is the capital of Ghana?")
         print(f"Returned: {result[:60]}...")
         print("Status: STALE (served) + Background refresh triggered ✓")
         
@@ -82,7 +83,7 @@ async def main():
         
         # Check again - should have fresh data now
         print("\nChecking after background refresh:")
-        result2 = await cache.check("What is the capital of France?")
+        result2 = await cache.check("What is the capital of Ghana?")
         if "REFRESHED" in result2:
             print(f"Returned: {result2[:60]}...")
             print("Status: Background refresh successful! ✅\n")
@@ -116,19 +117,6 @@ async def main():
         
         # Wait for refresh
         await asyncio.sleep(1)
-        
-        print("="*70)
-        print("METRICS SUMMARY")
-        print("="*70 + "\n")
-        
-        metrics = cache.get_metrics()
-        staleness = metrics['staleness']
-        
-        print(f"Stale Served:       {staleness['stale_served_count']}")
-        print(f"Stale Refused:      {staleness['stale_refused_count']}")
-        print(f"Avg Stale Age:      {staleness['average_stale_age_seconds']:.1f}s")
-        print(f"Total Queries:      {metrics['total_queries']}")
-        print(f"Hit Rate:           {metrics['hit_rate_percentage']:.1f}%\n")
         
         print("="*70)
         print("KEY BENEFITS")
