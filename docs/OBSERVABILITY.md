@@ -2,9 +2,6 @@
 
 Complete guide to monitoring and observing your semantic cache in production.
 
-> [!WARNING]
-> **Known Issue**: The `get_metrics()` and `get_metrics_prometheus()` methods have known hanging issues in some environments. We are actively working on a fix. In the meantime, observe cache behavior through verbose logging.
-
 ## Table of Contents
 
 - [Overview](#overview)
@@ -44,8 +41,9 @@ async with AsyncSemanticCacheManager(config) as cache:
     await cache.store(prompt, response)
     result = await cache.check(prompt)
     
-    # Observe behavior through logging (metrics API has known issues)
-    # Logs show: Cache HIT/MISS, latency, and layer (L1/L2)
+    # Get detailed metrics
+    metrics = cache.get_metrics()
+    print(f"Hit rate: {metrics['hit_rate_percentage']}%")
 ```
 
 ### Metrics Structure
