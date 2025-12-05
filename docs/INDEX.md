@@ -1,6 +1,6 @@
-# Semantic Cache - Documentation Index
+# Vertector Semantic Cache - Documentation Index
 
-Welcome to the semantic-cache documentation! This index will help you find the information you need.
+Welcome to the vertector-semantic-cache documentation! This index will help you find the information you need.
 
 ## Quick Links
 
@@ -8,7 +8,6 @@ Welcome to the semantic-cache documentation! This index will help you find the i
 - [Core Features](#core-features)
 - [Advanced Features](#advanced-features)
 - [Operations](#operations)
-- [Development](#development)
 
 ---
 
@@ -19,9 +18,9 @@ Welcome to the semantic-cache documentation! This index will help you find the i
 - **[Examples](../examples/)** - Working code examples for all features
 
 ### First Steps
-1. Install: `pip install semantic-cache`
+1. Install: `pip install vertector-semantic-cache`
 2. Start Redis: `docker-compose up -d`
-3. Run basic example: `python examples/basic_usage.py`
+3. Run basic example: `PYTHONPATH=src python examples/basic_usage.py`
 
 ---
 
@@ -76,7 +75,7 @@ Production-grade metrics and tracing.
 **Documentation**: [OBSERVABILITY.md](OBSERVABILITY.md)  
 **Examples**: `examples/observability_example.py`  
 **Features**:
-- L1/L2 metrics breakdown (enabled by default)
+- L1/L2 metrics breakdown
 - Context and tag distribution tracking
 - Prometheus export
 - Optional OpenTelemetry tracing
@@ -97,26 +96,6 @@ Production-grade metrics and tracing.
 - **Context Fields**: Optimize for your use case
 - **Tag Strategy**: Hierarchical naming conventions
 
-### Troubleshooting
-- **Common Issues**: [ADVANCED_CACHING.md](ADVANCED_CACHING.md#troubleshooting)
-- **Observability Debugging**: [OBSERVABILITY.md](OBSERVABILITY.md#troubleshooting)
-
----
-
-## Development
-
-### Integration Guides
-- **LangChain**: [README.md](../README.md#langchain-integration)
-- **Google ADK**: [README.md](../README.md#google-adk-integration)
-
-### Configuration
-- **CacheConfig**: All configuration options
-- **ObservabilityConfig**: Monitoring and tracing setup
-- **L1CacheConfig**: In-memory cache configuration
-
-### API Reference
-Full API documentation for all classes and methods.
-
 ---
 
 ## Feature Comparison
@@ -130,35 +109,6 @@ Full API documentation for all classes and methods.
 | **Tag-Based Invalidation** | ✅ | No | No |
 | **Enhanced Metrics** | ✅ | No | No |
 | **Distributed Tracing** | ❌ | Yes | Yes (`[observability]`) |
-
----
-
-## Version History
-
-### Latest (Current)
-- ✅ L1/L2 Cache Hierarchy
-- ✅ Context-Aware Caching
-- ✅ Tag-Based Invalidation
-- ✅ Enhanced Metrics & Observability
-- ✅ OpenTelemetry Tracing Support
-
-### Previous
-- Basic semantic caching
-- RedisVL integration
-- Multi-tenancy support
-- Reranker integration
-
----
-
-## Support & Contributing
-
-### Getting Help
-- **Issues**: [GitHub Issues](https://github.com/your-repo/semantic-cache/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-repo/semantic-cache/discussions)
-
-### Contributing
-- Pull requests welcome!
-- See CONTRIBUTING.md for guidelines
 
 ---
 
@@ -181,11 +131,6 @@ await cache.check(prompt, context={"persona": "developer"})
 await cache.store(prompt, response, tags=["category:ai"])
 ```
 
-**Get Metrics:**
-```python
-metrics = cache.get_metrics()
-```
-
 **Enable Tracing:**
 ```python
 observability=ObservabilityConfig(enable_tracing=True)
@@ -193,10 +138,12 @@ observability=ObservabilityConfig(enable_tracing=True)
 
 ---
 
+## Support & Contributing
+
+**GitHub**: [github.com/vertector/vertector-semantic-cache](https://github.com/vertector/vertector-semantic-cache)
+
+---
+
 ## Documentation Updates
 
-This documentation is current as of **December 1, 2024**.
-
-For the latest updates, see:
-- [CHANGELOG.md](../CHANGELOG.md)
-- [Release Notes](https://github.com/your-repo/semantic-cache/releases)
+This documentation is current as of **December 5, 2024**.

@@ -392,6 +392,9 @@ for tag, count in metrics['tag_invalidations'].items():
     print(f"Tag '{tag}': {count} invalidations")
 ```
 
+> [!WARNING]
+> **Known Issue**: The `get_metrics()` method has known hanging issues in some environments. We are actively working on a fix. In the meantime, observe cache behavior through verbose logging which shows HIT/MISS, latency, and cache layer information.
+
 #### Prometheus Export
 
 ```python

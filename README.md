@@ -1,46 +1,49 @@
-# Semantic Cache
+# Vertector Semantic Cache
 
 Enterprise-grade async semantic caching for AI agents using RedisVL.
 
 ## Features
 
-- ✨ **Full Async Support** - Built with `async/await` for non-blocking operations
-- 🎯 **Semantic Similarity** - Cache responses based on meaning, not exact matches
-- ⚡- **L1/L2 Cache Hierarchy**: In-memory (L1) + Redis (L2) for 10-1000x performance
-- **Context-Aware Caching**: Isolate cache by user, conversation, or custom context
-- **Tag-Based Invalidation**: Efficiently invalidate related entries (e.g., by product, category)
-- **Batch Operations**: Check/store multiple prompts efficiently
-- **Cache Staleness Mitigation**: Version-based invalidation and stale-while-revalidate with refresh callbacks
-- **Observability**: Enhanced metrics (L1/L2 breakdown, staleness tracking), OpenTelemetry tracing, Prometheus export
-- **Reranking**: Optional semantic reranking (HuggingFace, Cohere)
-- **Async-First**: Built on asyncio for high concurrency
-- **Production-Ready**: Comprehensive error handling, retries, logging
-- 👥 **Multi-Tenancy** - User isolation with filterable fields
+- 🚀 **Semantic Similarity** - Cache responses based on meaning, not exact matches
+- ⚡ **L1/L2 Cache Hierarchy** - In-memory (L1) + Redis (L2) for 10-1000x performance
+- 🎯 **Context-Aware Caching** - Isolate cache by user, conversation, or custom context
+- 🏷️ **Tag-Based Invalidation** - Efficiently invalidate related entries
+- 📦 **Batch Operations** - Check/store multiple prompts efficiently
+- 🔄 **Staleness Mitigation** - Version-based invalidation and stale-while-revalidate
+- 📊 **Observability** - L1/L2 metrics, OpenTelemetry tracing, Prometheus export
 - 🔌 **Easy Integration** - Async wrappers for LangChain and Google ADK
-- 📊 **Prometheus Metrics** - Export metrics for monitoring
-- 📈 **Enhanced Observability** - L1/L2 metrics breakdown, context tracking, distributed tracing
 - 🛡️ **Type Safe** - Full type hints with Pydantic validation
 
 ## Installation
 
 ```bash
 # Basic installation
-pip install semantic-cache
+pip install vertector-semantic-cache
 
 # With LangChain support
-pip install semantic-cache[langchain]
+pip install vertector-semantic-cache[langchain]
 
 # With Google ADK support
-pip install semantic-cache[google-adk]
+pip install vertector-semantic-cache[google-adk]
 
 # With observability (OpenTelemetry tracing)
-pip install semantic-cache[observability]
+pip install vertector-semantic-cache[observability]
 
 # With all optional dependencies
-pip install semantic-cache[all]
+pip install vertector-semantic-cache[all]
 ```
 
 ## Quick Start
+
+### Prerequisites
+
+1. **Python >= 3.10**
+2. **Redis with RediSearch** (RedisStack or Redis Cloud)
+
+```bash
+# Start Redis with Docker
+docker-compose up -d
+```
 
 ### Basic Usage
 
@@ -55,23 +58,24 @@ async def main():
         name="my_cache",
         ttl=3600,  # 1 hour
         distance_threshold=0.2,  # Semantic similarity threshold
+        overwrite=True,  # Overwrite existing index
     )
     
     # Use cache with context manager
     async with AsyncSemanticCacheManager(config) as cache:
         # Store a response
         await cache.store(
-            prompt="What is the capital of France?",
-            response="The capital of France is Paris."
+            prompt="What is the capital of Ghana?",
+            response="The capital of Ghana is Accra."
         )
         
-        # Check for semantic match
-        result = await cache.check("Tell me the capital city of France")
-        print(result)  # "The capital of France is Paris."
+        # Check for exact match
+        result = await cache.check("What is the capital of Ghana?")
+        print(result)  # "The capital of Ghana is Accra."
         
-        # View metrics
-        metrics = cache.get_metrics()
-        print(f"Hit rate: {metrics['hit_rate_percentage']}%")
+        # Check for semantic match (different wording, same meaning)
+        result = await cache.check("Tell me the capital city of Ghana")
+        print(result)  # "The capital of Ghana is Accra."
 
 asyncio.run(main())
 ```
@@ -80,29 +84,40 @@ asyncio.run(main())
 
 ```python
 import asyncio
+import os
+from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
 from vertector_semantic_cache import AsyncSemanticCacheManager, CacheConfig
 from vertector_semantic_cache.integrations import AsyncLangChainCachedLLM
 
+load_dotenv()
+
 async def main():
     # Setup cache
-    cache_config = CacheConfig(redis_url="redis://localhost:6380")
+    cache_config = CacheConfig(
+        redis_url="redis://localhost:6380",
+        name="langchain_cache",
+        overwrite=True,
+    )
     cache_manager = AsyncSemanticCacheManager(cache_config)
     
     # Setup LLM with caching
-    llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
+    llm = ChatGoogleGenerativeAI(
+        model="gemini-2.0-flash",
+        google_api_key=os.environ.get("GOOGLE_API_KEY"),
+    )
     cached_llm = AsyncLangChainCachedLLM(cache_manager, llm)
     
     async with cache_manager:
-        # First call - hits LLM
+        # First call - calls LLM
         response1 = await cached_llm.query(
-            prompt="What is the capital of France?",
+            prompt="What is the capital of Ghana?",
             system_message="You are a helpful assistant."
         )
         
-        # Second call - hits cache
+        # Second call - returns from cache (instant!)
         response2 = await cached_llm.query(
-            prompt="Tell me the capital city of France",  # Semantically similar
+            prompt="Tell me the capital city of Ghana",  # Semantically similar
             system_message="You are a helpful assistant."
         )
 
@@ -113,20 +128,27 @@ asyncio.run(main())
 
 ```python
 import asyncio
+from dotenv import load_dotenv
 from google.adk.agents import Agent
 from google.adk.apps.app import App
 from vertector_semantic_cache import AsyncSemanticCacheManager, CacheConfig
 from vertector_semantic_cache.integrations import AsyncGoogleADKCachedAgent
 
+load_dotenv()
+
 async def main():
     # Setup cache
-    cache_config = CacheConfig(redis_url="redis://localhost:6380")
+    cache_config = CacheConfig(
+        redis_url="redis://localhost:6380",
+        name="adk_cache",
+        overwrite=True,
+    )
     cache_manager = AsyncSemanticCacheManager(cache_config)
     
     # Setup agent
     agent = Agent(
         name="my_agent",
-        model="gemini-2.5-flash",
+        model="gemini-2.0-flash",
         instruction="You are a helpful assistant."
     )
     app = App(name="my_app", root_agent=agent)
@@ -135,11 +157,10 @@ async def main():
     cached_agent = AsyncGoogleADKCachedAgent(cache_manager, agent, app)
     
     async with cache_manager:
-        response = await cached_agent.query(
-            prompt="What is the capital of France?",
-            user_id="user123"
-        )
+        response = await cached_agent.query("What is the capital of Ghana?")
         print(response)
+        
+        await cached_agent.close()
 
 asyncio.run(main())
 ```
@@ -155,16 +176,7 @@ SEMANTIC_CACHE_REDIS_URL=redis://localhost:6380
 SEMANTIC_CACHE_CACHE_NAME=my_cache
 SEMANTIC_CACHE_TTL=3600
 SEMANTIC_CACHE_DISTANCE_THRESHOLD=0.2
-SEMANTIC_CACHE_LOG_LEVEL=INFO
-```
-
-Then use `CacheSettings`:
-
-```python
-from vertector_semantic_cache.core.config import CacheSettings
-
-settings = CacheSettings()
-config = settings.to_cache_config()
+GOOGLE_API_KEY=your-api-key
 ```
 
 ### Vectorizer Configuration
@@ -240,11 +252,6 @@ result = await cache.check(
 )
 ```
 
-**Features:**
-- Automatic context hashing for deterministic keys
-- L1 and L2 isolation
-- Configurable context fields
-
 ### Tag-Based Invalidation
 
 Tag cache entries for flexible invalidation:
@@ -272,198 +279,59 @@ count = await cache.invalidate_by_tags(
 
 ### Batch Operations
 
-Check or store multiple prompts efficiently with a single API call:
+Check or store multiple prompts efficiently:
 
 ```python
 # Batch check multiple prompts
-prompts = [
-    "What is AI?",
-    "What is ML?",
-    "What is DL?"
-]
-
+prompts = ["What is AI?", "What is ML?", "What is DL?"]
 results = await cache.batch_check(prompts)
 # Returns: [response1, response2, None]  # One cache miss
-
-# With context
-contexts = [
-    {"user_persona": "developer"},
-    {"user_persona": "developer"},
-    {"user_persona": "manager"}
-]
-results = await cache.batch_check(prompts, contexts=contexts)
 ```
-
-**Benefits:**
-- Simplified API for bulk operations
-- Parallel L1 cache lookups
-- Concurrent L2 queries
-- Automatic metrics tracking
-
-> **Note:** Current performance is limited by RedisVL's lack of batch embedding API. Performance gains are primarily from L1 cache hits (~2-3x faster). Full 5-10x speedup awaits RedisVL batch API support.
 
 ### Cache Staleness Mitigation
 
-Prevent serving outdated data with automatic staleness detection and refresh:
+Prevent serving outdated data with automatic staleness detection:
 
 ```python
-# Example: Refresh callback for automatic cache updates
-async def refresh_llm_response(prompt, user_id=None, context=None):
-    """Called when stale data is served - refresh in background."""
-    fresh_response = await your_llm.generate(prompt)
-    return fresh_response
-
 config = CacheConfig(
     ttl=3600,  # 1 hour TTL
     
-    # Stale-while-revalidate (serve stale while refreshing)
+    # Stale-while-revalidate
     enable_stale_while_revalidate=True,
     stale_tolerance_seconds=300,       # Serve stale up to 5min old
     max_stale_age_seconds=3600,        # Refuse if older than 1hr
-    stale_refresh_callback=refresh_llm_response,  # Auto-refresh
     
     # Version-based invalidation
     enable_version_checking=True,
     cache_version="v1.0.0",  # Bump to invalidate all entries
 )
-
-async with AsyncSemanticCacheManager(config) as cache:
-    # Entry serves stale data briefly while refreshing in background
-    result = await cache.check(prompt)
-    
-    # Check staleness metrics
-    metrics = cache.get_metrics()
-    print(f"Stale served: {metrics['staleness']['stale_served_count']}")
-    print(f"Version mismatches: {metrics['staleness']['version_mismatches']}")
-```
-
-**Features:**
-- **Stale-While-Revalidate**: Serve slightly stale data for better UX while refreshing
-- **Background Refresh**: Optional callback to automatically update stale entries
-- **Version Checking**: Auto-invalidate all entries on model/data version change
-- **Staleness Metrics**: Track stale serve/refuse rates, version mismatches
-- **Max Age Protection**: Refuse very old entries (configurable threshold)
-
-> **Note:** Staleness checking works on entries still in Redis. Once Redis TTL expires and deletes an entry, it becomes a cache miss. Use longer TTLs with staleness checking for best results.
-
-### Observability & Monitoring
-
-Get deep insights into cache performance with automatic metrics tracking:
-
-```python
-# Enhanced metrics are enabled by default
-metrics = cache.get_metrics()
-
-print(f"Overall Hit Rate: {metrics['hit_rate_percentage']}%")
-print(f"L1 Hit Rate: {metrics['l1_cache']['hit_rate_percentage']}%")
-print(f"L2 Hit Rate: {metrics['l2_cache']['hit_rate_percentage']}%")
-print(f"L1 Avg Latency: {metrics['l1_cache']['avg_latency_ms']}ms")
-print(f"L2 Avg Latency: {metrics['l2_cache']['avg_latency_ms']}ms")
-
-# Context distribution
-for context_type, count in metrics['context_hits'].items():
-    print(f"Context {context_type}: {count} hits")
-
-# Prometheus export for monitoring
-prometheus_metrics = cache.get_metrics_prometheus()
-```
-
-**Optional: Distributed Tracing**
-
-Enable OpenTelemetry tracing for deep observability:
-
-```python
-from vertector_semantic_cache.core.config import ObservabilityConfig
-
-config = CacheConfig(
-    observability=ObservabilityConfig(
-        enable_tracing=True,
-        tracing_exporter="jaeger",  # or "otlp", "console"
-        tracing_endpoint="http://localhost:14268",
-    )
-)
-```
-
-**Metrics Available:**
-- L1/L2 cache hit/miss rates and latencies
-- Context-based hit distribution
-- Tag invalidation tracking
-- Full Prometheus export for Grafana dashboards
-
-## Advanced Features
-
-### Multi-Tenancy
-
-```python
-# Store with user ID
-await cache.store(
-    prompt="What is my favorite color?",
-    response="Your favorite color is blue.",
-    user_id="user_1"
-)
-
-# Check with user ID
-result = await cache.check(
-    prompt="What is my favorite color?",
-    user_id="user_1"
-)
-```
-
-### Metrics Export
-
-```python
-# Get metrics as dictionary
-metrics = cache.get_metrics()
-
-# Get Prometheus format
-prometheus_metrics = cache.get_metrics_prometheus()
-print(prometheus_metrics)
-```
-
-### Custom Metadata
-
-```python
-await cache.store(
-    prompt="What is the weather?",
-    response="It's sunny.",
-    metadata={
-        "source": "weather_api",
-        "confidence": 0.95,
-        "timestamp": "2025-01-01T00:00:00Z"
-    }
-)
-```
-
-## Requirements
-
-- Python >= 3.10
-- Redis with RediSearch module (RedisStack or Redis Cloud)
-
-### Running Redis with Docker
-
-```bash
-docker-compose up -d
 ```
 
 ## Examples
 
-See the `examples/` directory for more:
+See the `examples/` directory for working code:
 
-- `basic_usage.py` - Basic cache operations, multi-tenancy, reranking
-- `langchain_example.py` - LangChain integration with streaming
-- `google_adk_example.py` - Google ADK integration with multi-user sessions
-- `l1_l2_cache_example.py` - L1/L2 cache hierarchy demonstration
-- `context_aware_example.py` - Context-aware caching with isolation
-- `tag_invalidation_example.py` - Tag-based cache invalidation
-- `observability_example.py` - Metrics, monitoring, and distributed tracing
-- `batch_operations_example.py` - Batch check performance comparison
-- `staleness_example.py` - Cache staleness mitigation strategies
-- `stale_refresh_callback_example.py` - Automatic background refresh with callbacks
+| Example | Description |
+|---------|-------------|
+| `basic_usage.py` | Basic cache operations |
+| `langchain_example.py` | LangChain integration |
+| `google_adk_example.py` | Google ADK integration |
+| `l1_l2_cache_example.py` | L1/L2 cache hierarchy |
+| `context_aware_example.py` | Context-aware caching |
+| `tag_invalidation_example.py` | Tag-based invalidation |
+| `batch_operations_example.py` | Batch operations |
+| `staleness_example.py` | Staleness mitigation |
+| `observability_example.py` | Monitoring & observability |
+
+Run an example:
+```bash
+PYTHONPATH=src python examples/basic_usage.py
+```
 
 ## Architecture
 
 ```
-src/semantic_cache/
+src/vertector_semantic_cache/
 ├── core/
 │   ├── cache_manager.py    # Async cache manager
 │   ├── config.py           # Configuration with Pydantic
@@ -489,7 +357,18 @@ src/semantic_cache/
 - **Async/Await** - Non-blocking operations for high throughput
 - **Connection Pooling** - Efficient Redis connection management
 - **Retry Logic** - Exponential backoff for resilience
-- **Graceful Degradation** - Returns None on cache errors instead of crashing
+- **Graceful Degradation** - Returns None on cache errors
+
+## Documentation
+
+- [Advanced Caching Guide](docs/ADVANCED_CACHING.md) - L1/L2, context-aware, tags
+- [Observability Guide](docs/OBSERVABILITY.md) - Metrics, tracing, monitoring
+- [Documentation Index](docs/INDEX.md) - Full documentation index
+
+## Requirements
+
+- Python >= 3.10
+- Redis with RediSearch module (RedisStack or Redis Cloud)
 
 ## License
 
@@ -498,3 +377,5 @@ MIT
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
+**GitHub**: [github.com/vertector/vertector-semantic-cache](https://github.com/vertector/vertector-semantic-cache)
