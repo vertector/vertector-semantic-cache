@@ -1,10 +1,8 @@
 """Observability & Monitoring Example.
 
 This example demonstrates the cache's built-in observability features
-including L1/L2 cache tracking, context-aware caching, and tag invalidation.
-
-Note: Metrics collection has known issues with hanging. This example
-focuses on demonstrating the observable behavior through logging.
+including L1/L2 cache tracking, context-aware caching, tag invalidation,
+and the metrics API.
 """
 
 import asyncio
@@ -16,7 +14,7 @@ async def main():
     print("Observability & Monitoring Example")
     print("="*70 + "\n")
     
-    # Configure cache with L1 cache enabled (observability via logs)
+    # Configure cache with L1 cache enabled
     config = CacheConfig(
         redis_url="redis://localhost:6380",
         name="obs_demo",
@@ -26,7 +24,6 @@ async def main():
             model="sentence-transformers/all-MiniLM-L6-v2"
         ),
         l1_cache=L1CacheConfig(enabled=True),
-        # Note: Tracing disabled to prevent console spam
     )
     
     async with AsyncSemanticCacheManager(config) as cache:
@@ -41,7 +38,7 @@ async def main():
         print("1. Storing entry (goes to both L1 and L2)")
         await cache.store(prompt, response)
         
-        print("\n2. First check (Should be L1 HIT - watch the logs!)")
+        print("\n2. First check (Should be L1 HIT)")
         result = await cache.check(prompt)
         print(f"   Result: {result[:50]}...")
         
@@ -50,7 +47,7 @@ async def main():
             cache._l1_cache.clear()
             print("   L1 cache cleared")
         
-        print("\n4. Second check (Should be L2 HIT - notice the latency difference)")
+        print("\n4. Second check (Should be L2 HIT)")
         result = await cache.check(prompt)
         print(f"   Result: {result[:50] if result else 'None'}...")
         
@@ -109,14 +106,62 @@ async def main():
         print(f"   Result: {result}")
         
         print("\n" + "="*70)
-        print("KEY OBSERVABILITY INSIGHTS")
+        print("PHASE 4: Metrics API")
         print("="*70 + "\n")
         
-        print("✓ L1 Cache: In-memory, sub-millisecond latency")
-        print("✓ L2 Cache: Redis-based, ~20-30ms latency")
-        print("✓ Context-Aware: Same prompt, different responses based on context")
-        print("✓ Tag Invalidation: Selective cache invalidation by tags")
-        print("✓ Logging: All operations logged with timing information")
+        # Get detailed metrics
+        metrics = cache.get_metrics()
+        
+        print("Overall Cache Metrics:")
+        print(f"  Total Queries: {metrics['total_queries']}")
+        print(f"  Cache Hits: {metrics['cache_hits']}")
+        print(f"  Cache Misses: {metrics['cache_misses']}")
+        print(f"  Hit Rate: {metrics['hit_rate_percentage']}%")
+        print()
+        
+        print("L1 Cache Metrics:")
+        l1 = metrics['l1_cache']
+        print(f"  Hits: {l1['hits']}")
+        print(f"  Misses: {l1['misses']}")
+        print(f"  Hit Rate: {l1['hit_rate_percentage']}%")
+        print(f"  Avg Latency: {l1['avg_latency_ms']}ms")
+        print()
+        
+        print("L2 Cache Metrics:")
+        l2 = metrics['l2_cache']
+        print(f"  Hits: {l2['hits']}")
+        print(f"  Misses: {l2['misses']}")
+        print(f"  Hit Rate: {l2['hit_rate_percentage']}%")
+        print(f"  Avg Latency: {l2['avg_latency_ms']}ms")
+        print()
+        
+        if metrics['context_hits']:
+            print("Context Hits Distribution:")
+            for ctx, count in metrics['context_hits'].items():
+                print(f"  {ctx}: {count}")
+            print()
+        
+        if metrics['tag_invalidations']:
+            print("Tag Invalidations:")
+            for tag, count in metrics['tag_invalidations'].items():
+                print(f"  {tag}: {count}")
+            print()
+        
+        print("Staleness Tracking:")
+        staleness = metrics['staleness']
+        print(f"  Stale Served: {staleness['stale_served_count']}")
+        print(f"  Stale Refused: {staleness['stale_refused_count']}")
+        print(f"  Version Mismatches: {staleness['version_mismatches']}")
+        
+        print("\n" + "="*70)
+        print("PHASE 5: Prometheus Export")
+        print("="*70 + "\n")
+        
+        prometheus_metrics = cache.get_metrics_prometheus()
+        # Show first 20 lines
+        lines = prometheus_metrics.split('\n')[:20]
+        print('\n'.join(lines))
+        print(f"\n... ({len(prometheus_metrics.split(chr(10))) - 20} more lines)")
         
         print("\n✅ Observability example complete!\n")
 
