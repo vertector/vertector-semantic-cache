@@ -75,9 +75,9 @@ async def google_adk_example():
 
 
 async def multi_user_example():
-    """Demonstrate multi-user sessions."""
+    """Demonstrate multi-user cache isolation."""
     print("\n" + "="*70)
-    print("Multi-User Sessions Example")
+    print("Multi-User Cache Isolation Example")
     print("="*70 + "\n")
     
     cache_config = CacheConfig(
@@ -93,28 +93,39 @@ async def multi_user_example():
     
     agent = Agent(
         name="assistant",
-        model="gemini-2.5-flash",
-        instruction="You are a personal assistant."
+        model="gemini-2.0-flash",
+        instruction="You are a helpful assistant. Give brief, accurate answers."
     )
     
-    # Custom app name - no restrictions!
-    app = App(name="personal_assistant_app", root_agent=agent)
+    app = App(name="multi_user_app", root_agent=agent)
     cached_agent = AsyncGoogleADKCachedAgent(cache_manager, agent, app)
     
     async with cache_manager:
-        # Different users with different contexts
+        # Query 1: Alice asks about Ghana
+        print("1. Alice asks: 'What is the capital of Ghana?'")
         response1 = await cached_agent.query(
-            "What's my schedule for today?",
+            "What is the capital of Ghana?",
             user_id="alice"
         )
-        print(f"Alice: {response1[:100]}...")
+        print(f"   Response: {response1[:100]}...\n")
         
+        # Query 2: Bob asks the same question (should get from cache)
+        print("2. Bob asks same question (should use cache):")
         response2 = await cached_agent.query(
-            "What's my schedule for today?",
+            "What is the capital of Ghana?",
             user_id="bob"
         )
-        print(f"Bob: {response2[:100]}...")
+        print(f"   Response: {response2[:100]}...\n")
         
+        # Query 3: Alice asks a semantically similar question
+        print("3. Alice asks similar: 'Tell me Ghana's capital city'")
+        response3 = await cached_agent.query(
+            "Tell me Ghana's capital city",
+            user_id="alice"
+        )
+        print(f"   Response: {response3[:100]}...\n")
+        
+        print("✅ Multi-user example complete!\n")
         await cached_agent.close()
 
 
@@ -126,3 +137,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
