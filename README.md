@@ -12,6 +12,7 @@ Enterprise-grade async semantic caching for AI agents using RedisVL.
 - 🔄 **Staleness Mitigation** - Version-based invalidation and stale-while-revalidate
 - 📊 **Observability** - L1/L2 metrics, OpenTelemetry tracing, Prometheus export
 - 🔌 **Easy Integration** - Async wrappers for LangChain and Google ADK
+- 🤖 **MCP Server** - Model Context Protocol for AI agent memory
 - 🛡️ **Type Safe** - Full type hints with Pydantic validation
 
 ## Installation
@@ -25,6 +26,9 @@ pip install vertector-semantic-cache[langchain]
 
 # With Google ADK support
 pip install vertector-semantic-cache[google-adk]
+
+# With MCP server support
+pip install vertector-semantic-cache[mcp]
 
 # With observability (OpenTelemetry tracing)
 pip install vertector-semantic-cache[observability]
@@ -338,6 +342,8 @@ src/vertector_semantic_cache/
 │   ├── metrics.py          # Metrics tracking
 │   ├── l1_cache.py         # In-memory L1 cache
 │   └── tag_manager.py      # Tag-based invalidation
+├── mcp/
+│   └── server.py           # MCP server for AI agents
 ├── vectorizers/
 │   └── factory.py          # Vectorizer factory
 ├── rerankers/
@@ -349,6 +355,57 @@ src/vertector_semantic_cache/
     ├── logging.py          # Structured logging
     └── exceptions.py       # Custom exceptions
 ```
+
+## MCP Server
+
+The package includes a **Model Context Protocol (MCP) server** that exposes the semantic cache as tools and resources for AI agents like Claude Desktop.
+
+### Quick Start
+
+```bash
+# Install with MCP support
+pip install vertector-semantic-cache[mcp]
+
+# Run the server
+python -m vertector_semantic_cache.mcp.server
+```
+
+### Claude Desktop Configuration
+
+Add to your `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "vertector-cache": {
+      "command": "python",
+      "args": ["-m", "vertector_semantic_cache.mcp.server"],
+      "env": {
+        "REDIS_URL": "redis://localhost:6380"
+      }
+    }
+  }
+}
+```
+
+### Available Tools
+
+| Tool | Description |
+|------|-------------|
+| `cache_check` | Check if a semantically similar prompt exists |
+| `cache_store` | Store a prompt-response pair |
+| `cache_clear` | Clear all cache entries |
+| `invalidate_by_tag` | Invalidate entries by tag |
+| `invalidate_by_tags` | Invalidate by multiple tags |
+| `batch_check` | Check multiple prompts at once |
+
+### Available Resources
+
+| URI | Description |
+|-----|-------------|
+| `cache://metrics` | Current cache performance metrics |
+| `cache://config` | Current cache configuration |
+| `cache://health` | Cache health status |
 
 ## Performance
 

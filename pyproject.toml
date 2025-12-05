@@ -63,6 +63,9 @@ observability = [
     "opentelemetry-exporter-jaeger>=1.20.0",
     "opentelemetry-instrumentation>=0.41b0",
 ]
+mcp = [
+    "mcp>=1.0.0",
+]
 dev = [
     "pytest>=7.0.0",
     "pytest-asyncio>=0.21.0",
@@ -72,7 +75,7 @@ dev = [
     "mypy>=1.0.0",
 ]
 all = [
-    "vertector-semantic-cache[langchain,google-adk,openai,cohere,voyageai,vertexai,observability,dev]",
+    "vertector-semantic-cache[langchain,google-adk,openai,cohere,voyageai,vertexai,observability,mcp,dev]",
 ]
 
 [project.urls]
