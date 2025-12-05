@@ -412,7 +412,7 @@ prometheus_metrics = cache.get_metrics_prometheus()
 
 1. **Install OpenTelemetry dependencies**:
    ```bash
-   pip install semantic-cache[observability]
+   pip install vertector-semantic-cache[observability]
    ```
 
 2. **Configure tracing**:

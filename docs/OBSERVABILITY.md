@@ -140,7 +140,7 @@ l2_latency = metrics['l2_cache']['avg_latency_ms']
 ### Installation
 
 ```bash
-pip install semantic-cache[observability]
+pip install vertector-semantic-cache[observability]
 ```
 
 This installs:
@@ -164,6 +164,9 @@ config = CacheConfig(
     )
 )
 ```
+
+> [!TIP]
+> For console tracing in development, spans are exported immediately. For production (otlp/jaeger), call `shutdown_tracing()` to flush pending spans on exit, or the atexit handler will do it automatically.
 
 ### Exporters
 
