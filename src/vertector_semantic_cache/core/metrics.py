@@ -25,6 +25,12 @@ class CacheMetrics:
     l2_hits: int = 0
     l2_misses: int = 0
     
+    # Staleness tracking (MUST be initialized here!)
+    _stale_served_count: int = 0
+    _stale_refused_count: int = 0
+    _version_mismatches: int = 0
+    _total_age_seconds: float = 0.0
+    
     # Context and tag metrics
     context_hits: Dict[str, int] = field(default_factory=lambda: defaultdict(int))
     tag_invalidations: Dict[str, int] = field(default_factory=lambda: defaultdict(int))
@@ -33,8 +39,8 @@ class CacheMetrics:
     l1_latencies: List[float] = field(default_factory=list)
     l2_latencies: List[float] = field(default_factory=list)
     
-    # Lock for thread-safe operations
-    _lock: threading.Lock = field(default_factory=threading.Lock, init=False, repr=False)
+    # Lock for thread-safe operations (use RLock to allow reentrant locking)
+    _lock: threading.RLock = field(default_factory=threading.RLock, init=False, repr=False)
     
     def increment_query(self) -> None:
         """Increment total query count."""
@@ -179,11 +185,22 @@ class CacheMetrics:
     def to_dict(self) -> Dict[str, Any]:
         """Export metrics as dictionary."""
         with self._lock:
-            # Calculate metrics directly to avoid deadlock with properties
+            # Calculate all metrics inline to avoid any potential issues
             hit_rate = (self.cache_hits / self.total_queries * 100) if self.total_queries > 0 else 0.0
             cost_savings = (self.llm_calls_avoided / self.total_queries * 100) if self.total_queries > 0 else 0.0
             avg_latency = (self.total_latency_saved / self.cache_hits * 1000) if self.cache_hits > 0 else 0.0
             error_rate = (self.errors / self.total_queries * 100) if self.total_queries > 0 else 0.0
+            
+            l1_total = self.l1_hits + self.l1_misses
+            l2_total = self.l2_hits + self.l2_misses
+            
+            l1_hit_rate = (self.l1_hits / l1_total * 100) if l1_total > 0 else 0.0
+            l2_hit_rate = (self.l2_hits / l2_total * 100) if l2_total > 0 else 0.0
+            
+            l1_avg_latency = (sum(self.l1_latencies) / len(self.l1_latencies) * 1000) if self.l1_latencies else 0.0
+            l2_avg_latency = (sum(self.l2_latencies) / len(self.l2_latencies) * 1000) if self.l2_latencies else 0.0
+            
+            avg_stale_age = (self._total_age_seconds / self._stale_served_count) if self._stale_served_count > 0 else 0.0
             
             return {
                 "total_queries": self.total_queries,
@@ -199,22 +216,22 @@ class CacheMetrics:
                 "l1_cache": {
                     "hits": self.l1_hits,
                     "misses": self.l1_misses,
-                    "hit_rate_percentage": round((self.l1_hits / (self.l1_hits + self.l1_misses) * 100) if (self.l1_hits + self.l1_misses) > 0 else 0.0, 2),
-                    "avg_latency_ms": round(sum(self.l1_latencies) / len(self.l1_latencies) * 1000, 3) if self.l1_latencies else 0.0,
+                    "hit_rate_percentage": round(l1_hit_rate, 2),
+                    "avg_latency_ms": round(l1_avg_latency, 3),
                 },
                 "l2_cache": {
                     "hits": self.l2_hits,
                     "misses": self.l2_misses,
-                    "hit_rate_percentage": round((self.l2_hits / (self.l2_hits + self.l2_misses) * 100) if (self.l2_hits + self.l2_misses) > 0 else 0.0, 2),
-                    "avg_latency_ms": round(sum(self.l2_latencies) / len(self.l2_latencies) * 1000, 3) if self.l2_latencies else 0.0,
+                    "hit_rate_percentage": round(l2_hit_rate, 2),
+                    "avg_latency_ms": round(l2_avg_latency, 3),
                 },
                 "context_hits": dict(self.context_hits),
                 "tag_invalidations": dict(self.tag_invalidations),
                 "staleness": {
-                    "stale_served_count": self.stale_served_count,
-                    "stale_refused_count": self.stale_refused_count,
-                    "version_mismatches": self.version_mismatches,
-                    "average_stale_age_seconds": round(self.average_stale_age_seconds, 2),
+                    "stale_served_count": self._stale_served_count,
+                    "stale_refused_count": self._stale_refused_count,
+                    "version_mismatches": self._version_mismatches,
+                    "average_stale_age_seconds": round(avg_stale_age, 2),
                 },
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             }
@@ -320,9 +337,6 @@ class CacheMetrics:
             
             return "\n".join(metrics)
 
-    
-
-    
     def reset(self) -> None:
         """Reset all metrics to zero."""
         with self._lock:
@@ -333,3 +347,15 @@ class CacheMetrics:
             self.llm_calls_avoided = 0
             self.errors = 0
             self.rerank_operations = 0
+            self.l1_hits = 0
+            self.l1_misses = 0
+            self.l2_hits = 0
+            self.l2_misses = 0
+            self._stale_served_count = 0
+            self._stale_refused_count = 0
+            self._version_mismatches = 0
+            self._total_age_seconds = 0.0
+            self.context_hits.clear()
+            self.tag_invalidations.clear()
+            self.l1_latencies.clear()
+            self.l2_latencies.clear()
