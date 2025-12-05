@@ -38,7 +38,7 @@ pip install vertector-semantic-cache[all]
 ### Prerequisites
 
 1. **Python >= 3.10**
-2. **Redis with RediSearch** (RedisStack or Redis Cloud)
+2. **Redis 8+** (has built-in vector search) or Redis Cloud
 
 ```bash
 # Start Redis with Docker
@@ -368,7 +368,7 @@ src/vertector_semantic_cache/
 ## Requirements
 
 - Python >= 3.10
-- Redis with RediSearch module (RedisStack or Redis Cloud)
+- Redis 8+ (has built-in vector search) or Redis Cloud
 
 ## License
 
