@@ -1,10 +1,14 @@
-"""LangChain integration example."""
+"""LangChain integration example.
+
+Requires: pip install langchain-google-genai
+Set GOOGLE_API_KEY environment variable before running.
+"""
 
 import asyncio
-from langchain_google_genai import ChatGoogleGenerativeAI
+import os
+import sys
 
 from vertector_semantic_cache import AsyncSemanticCacheManager, CacheConfig
-from vertector_semantic_cache.integrations import AsyncLangChainCachedLLM
 
 
 async def langchain_example():
@@ -13,18 +17,36 @@ async def langchain_example():
     print("LangChain Integration Example")
     print("="*70 + "\n")
     
+    # Check for API key
+    if not os.environ.get("GOOGLE_API_KEY"):
+        print("⚠️  GOOGLE_API_KEY environment variable not set.")
+        print("   Set it with: export GOOGLE_API_KEY='your-api-key'")
+        print("   Get a key at: https://makersuite.google.com/app/apikey")
+        print("\n   Skipping LangChain example.\n")
+        return
+    
+    try:
+        from langchain_google_genai import ChatGoogleGenerativeAI
+        from vertector_semantic_cache.integrations import AsyncLangChainCachedLLM
+    except ImportError as e:
+        print(f"⚠️  Missing dependency: {e}")
+        print("   Install with: pip install langchain-google-genai")
+        return
+    
     # Setup cache
     cache_config = CacheConfig(
         redis_url="redis://localhost:6380",
         name="langchain_cache",
         distance_threshold=0.2,
+        overwrite=True,
     )
     cache_manager = AsyncSemanticCacheManager(cache_config)
     
-    # Setup LLM
+    # Setup LLM with API key from environment
     llm = ChatGoogleGenerativeAI(
-        model="gemini-2.5-flash",
+        model="gemini-2.0-flash",
         temperature=0,
+        google_api_key=os.environ.get("GOOGLE_API_KEY"),
     )
     
     # Create cached LLM
@@ -34,66 +56,28 @@ async def langchain_example():
     test_queries = [
         "What is the capital of Ghana?",
         "Tell me the capital city of Ghana",  # Semantically similar
-        "What's the weather like in Accra?",
-        "How's the weather in Accra today?",  # Semantically similar
     ]
     
     async with cache_manager:
         for i, query in enumerate(test_queries, 1):
             print(f"\n[Query {i}] {query}")
-            response = await cached_llm.query(
-                prompt=query,
-                system_message="You are a helpful assistant.",
-                user_id="test_user"
-            )
-            print(f"Response: {response[:100]}...")
+            try:
+                response = await cached_llm.query(
+                    prompt=query,
+                    system_message="You are a helpful assistant. Keep responses brief.",
+                    user_id="test_user"
+                )
+                print(f"Response: {response[:150]}...")
+            except Exception as e:
+                print(f"Error: {e}")
             print("-"* 70)
         
-        # Print metrics
-        print("\n" + "="*70)
-        print("Cache Performance Metrics")
-        print("="*70)
-        metrics = cache_manager.get_metrics()
-        for key, value in metrics.items():
-            print(f"{key}: {value}")
-
-
-async def streaming_example():
-    """Demonstrate streaming with caching."""
-    print("\n" + "="*70)
-    print("Streaming Example")
-    print("="*70 + "\n")
-    
-    cache_config = CacheConfig(
-        redis_url="redis://localhost:6380",
-        name="streaming_cache",
-    )
-    cache_manager = AsyncSemanticCacheManager(cache_config)
-    
-    llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
-    cached_llm = AsyncLangChainCachedLLM(cache_manager, llm)
-    
-    async with cache_manager:
-        print("First query (streaming from LLM):")
-        async for chunk in cached_llm.stream(
-            prompt="Explain Python in one sentence.",
-            user_id="test_user"
-        ):
-            print(chunk, end="", flush=True)
-        
-        print("\n\nSecond query (streaming from cache):")
-        async for chunk in cached_llm.stream(
-            prompt="Explain Python in one sentence.",
-            user_id="test_user"
-        ):
-            print(chunk, end="", flush=True)
-        print("\n")
+        print("\n✅ LangChain example complete!\n")
 
 
 async def main():
     """Run all examples."""
     await langchain_example()
-    await streaming_example()
 
 
 if __name__ == "__main__":
