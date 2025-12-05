@@ -1,12 +1,16 @@
 """LangChain integration example.
 
-Requires: pip install langchain-google-genai
-Set GOOGLE_API_KEY environment variable before running.
+Requires: pip install langchain-google-genai python-dotenv
+Set GOOGLE_API_KEY in .env file before running.
 """
 
 import asyncio
 import os
 import sys
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 from vertector_semantic_cache import AsyncSemanticCacheManager, CacheConfig
 
