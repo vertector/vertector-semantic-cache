@@ -82,7 +82,7 @@ async def get_cache_manager() -> AsyncSemanticCacheManager:
         config = get_config_from_env()
         _cache_manager = AsyncSemanticCacheManager(config)
         await _cache_manager.initialize()
-        logger.info("Cache manager initialized", file=sys.stderr)
+        logger.info("Cache manager initialized")
     
     return _cache_manager
 
@@ -94,7 +94,7 @@ async def shutdown_cache_manager():
     if _cache_manager is not None:
         await _cache_manager.close()
         _cache_manager = None
-        logger.info("Cache manager shut down", file=sys.stderr)
+        logger.info("Cache manager shut down")
 
 
 def create_server() -> "Server":
@@ -280,7 +280,7 @@ def create_server() -> "Server":
                 return [TextContent(type="text", text=f"Unknown tool: {name}")]
                 
         except Exception as e:
-            logger.error(f"Tool {name} failed: {e}", file=sys.stderr)
+            logger.error(f"Tool {name} failed: {e}")
             return [TextContent(type="text", text=f"Error: {str(e)}")]
     
     # =========================================================================
