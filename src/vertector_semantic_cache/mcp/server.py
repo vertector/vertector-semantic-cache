@@ -64,7 +64,7 @@ def get_config_from_env() -> CacheConfig:
         redis_url=os.environ.get("REDIS_URL", "redis://localhost:6380"),
         name=os.environ.get("CACHE_NAME", "mcp_cache"),
         ttl=int(os.environ.get("CACHE_TTL", "3600")),
-        distance_threshold=float(os.environ.get("DISTANCE_THRESHOLD", "0.2")),
+        distance_threshold=float(os.environ.get("DISTANCE_THRESHOLD", "0.1")),
         overwrite=True,
         log_level="ERROR",  # Suppress cache logs
         vectorizer=VectorizerConfig(
