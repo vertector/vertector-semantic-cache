@@ -2,12 +2,37 @@
 
 This server exposes semantic cache operations as MCP tools and resources,
 allowing AI agents to use the cache for memory and knowledge management.
+
+IMPORTANT: MCP uses stdio for JSON-RPC communication. All logging MUST go
+to stderr, never stdout. This is configured at the top of this module.
 """
 
 import os
+import sys
 import asyncio
+import logging
 from typing import Optional, Dict, Any, List
-from contextlib import asynccontextmanager
+
+# CRITICAL: Redirect ALL logging to stderr before importing anything else
+# MCP uses stdout for JSON-RPC, so any stdout output corrupts the protocol
+logging.basicConfig(
+    level=logging.WARNING,  # Reduce noise
+    format='%(asctime)s %(name)s %(levelname)s %(message)s',
+    stream=sys.stderr,
+    force=True
+)
+
+# Also suppress specific noisy loggers
+for logger_name in [
+    'sentence_transformers',
+    'transformers',
+    'torch',
+    'redisvl',
+    'httpx',
+    'httpcore',
+    'vertector_semantic_cache',
+]:
+    logging.getLogger(logger_name).setLevel(logging.ERROR)
 
 try:
     from mcp.server import Server
@@ -24,9 +49,10 @@ except ImportError:
     MCP_AVAILABLE = False
 
 from vertector_semantic_cache import AsyncSemanticCacheManager, CacheConfig
-from vertector_semantic_cache.utils.logging import get_logger
 
-logger = get_logger("mcp.server")
+# Use stderr logger for this module
+logger = logging.getLogger("mcp.server")
+logger.setLevel(logging.INFO)
 
 # Global cache manager instance
 _cache_manager: Optional[AsyncSemanticCacheManager] = None
@@ -40,6 +66,7 @@ def get_config_from_env() -> CacheConfig:
         ttl=int(os.environ.get("CACHE_TTL", "3600")),
         distance_threshold=float(os.environ.get("DISTANCE_THRESHOLD", "0.2")),
         overwrite=True,
+        log_level="ERROR",  # Suppress cache logs
     )
 
 
@@ -51,7 +78,7 @@ async def get_cache_manager() -> AsyncSemanticCacheManager:
         config = get_config_from_env()
         _cache_manager = AsyncSemanticCacheManager(config)
         await _cache_manager.initialize()
-        logger.info("Cache manager initialized")
+        logger.info("Cache manager initialized", file=sys.stderr)
     
     return _cache_manager
 
@@ -63,7 +90,7 @@ async def shutdown_cache_manager():
     if _cache_manager is not None:
         await _cache_manager.close()
         _cache_manager = None
-        logger.info("Cache manager shut down")
+        logger.info("Cache manager shut down", file=sys.stderr)
 
 
 def create_server() -> "Server":
@@ -249,7 +276,7 @@ def create_server() -> "Server":
                 return [TextContent(type="text", text=f"Unknown tool: {name}")]
                 
         except Exception as e:
-            logger.error(f"Tool {name} failed: {e}")
+            logger.error(f"Tool {name} failed: {e}", file=sys.stderr)
             return [TextContent(type="text", text=f"Error: {str(e)}")]
     
     # =========================================================================
@@ -333,11 +360,11 @@ def create_server() -> "Server":
 async def main():
     """Run the MCP server."""
     if not MCP_AVAILABLE:
-        print("Error: MCP is not installed. Install with:")
-        print("  pip install vertector-semantic-cache[mcp]")
+        print("Error: MCP is not installed. Install with:", file=sys.stderr)
+        print("  pip install vertector-semantic-cache[mcp]", file=sys.stderr)
         return
     
-    logger.info("Starting Vertector Semantic Cache MCP Server")
+    print("Starting Vertector Semantic Cache MCP Server", file=sys.stderr)
     
     server = create_server()
     
