@@ -386,7 +386,34 @@ Add to your `claude_desktop_config.json`:
     }
   }
 }
-```
+
+### Redis Setup
+
+We provide a `docker-compose` setup to easily run a **Redis Stack** instance (required for vector search).
+
+1.  **Start Redis**:
+    ```bash
+    docker-compose up -d
+    ```
+    This starts Redis Stack on port `6380` (mapped to internal `6379`).
+
+2.  **Verify**:
+    ```bash
+    docker ps
+    # Should see 'redis-semantic-cache' running
+    ```
+
+### Configuration
+The cache is configured via environment variables or a `CacheConfig` object.
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `REDIS_URL` | `redis://localhost:6379` | Connection string for Redis Stack |
+| `DISTANCE_THRESHOLD` | `0.1` | Semantic similarity threshold (lower = stricter) |
+| `CACHE_TTL` | `3600` | Time-to-live for cache entries in seconds |
+
+### Development
+1.  **Install Dependencies**:
 
 ### Available Tools
 
