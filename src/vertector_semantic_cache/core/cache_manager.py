@@ -291,13 +291,27 @@ class AsyncSemanticCacheManager:
                     return await self._cache.acheck(
                         prompt=prompt,
                         num_results=num_results,
-                        return_fields=return_fields or ["response", "prompt", "metadata"],
+                        return_fields=return_fields or ["response", "prompt", "metadata", "vector_distance"],
                         filter_expression=filter_expression,
                     )
                 
                 cached_results = await self._retry_operation(_check)
                 
                 if cached_results and len(cached_results) > 0:
+                    # Enforce threshold manually (RedisVL sometimes returns results > threshold)
+                    result = cached_results[0]
+                    
+                    # Check distance if available
+                    if "vector_distance" in result:
+                        distance = float(result["vector_distance"])
+                        if distance > self.config.distance_threshold:
+                            logger.info(
+                                f"L2 Cache MISS (Distance filter): {distance:.4f} > {self.config.distance_threshold} "
+                                f"for prompt: '{prompt[:50]}...'"
+                            )
+                            self.metrics.record_miss()
+                            return None
+
                     # Apply reranking if enabled
                     if self._reranker:
                         cached_results = await self._rerank_results(prompt, cached_results)
