@@ -69,7 +69,7 @@ def get_config_from_env() -> CacheConfig:
         log_level="ERROR",  # Suppress cache logs
         vectorizer=VectorizerConfig(
             provider="huggingface",
-            model="sentence-transformers/all-MiniLM-L6-v2"  # Explicit model
+            model="Qwen/Qwen3-Embedding-0.6B"
         ),
     )
 
