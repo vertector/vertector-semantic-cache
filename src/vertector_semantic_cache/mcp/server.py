@@ -48,7 +48,7 @@ try:
 except ImportError:
     MCP_AVAILABLE = False
 
-from vertector_semantic_cache import AsyncSemanticCacheManager, CacheConfig
+from vertector_semantic_cache import AsyncSemanticCacheManager, CacheConfig, VectorizerConfig
 
 # Use stderr logger for this module
 logger = logging.getLogger("mcp.server")
@@ -67,6 +67,10 @@ def get_config_from_env() -> CacheConfig:
         distance_threshold=float(os.environ.get("DISTANCE_THRESHOLD", "0.2")),
         overwrite=True,
         log_level="ERROR",  # Suppress cache logs
+        vectorizer=VectorizerConfig(
+            provider="huggingface",
+            model="sentence-transformers/all-MiniLM-L6-v2"  # Explicit model
+        ),
     )
 
 
