@@ -67,10 +67,6 @@ def get_config_from_env() -> CacheConfig:
         distance_threshold=float(os.environ.get("DISTANCE_THRESHOLD", "0.1")),
         overwrite=True,
         log_level="ERROR",  # Suppress cache logs
-        vectorizer=VectorizerConfig(
-            provider="huggingface",
-            model="Qwen/Qwen3-Embedding-0.6B"
-        ),
     )
 
 
