@@ -286,32 +286,115 @@ class AsyncSemanticCacheManager:
                 filter_expression = self._build_filter_expression(user_id, filters)
                 
                 # Check cache (L2)
+                # Check cache (L2)
                 l2_start = time.time()
+                
                 async def _check():
-                    return await self._cache.acheck(
-                        prompt=prompt,
-                        num_results=num_results,
-                        return_fields=return_fields or ["response", "prompt", "metadata", "vector_distance"],
-                        filter_expression=filter_expression,
-                    )
+                    # Generate embedding
+                    vector = self._cache._vectorizer.embed(prompt)
+                    if isinstance(vector, list) and isinstance(vector[0], list):
+                        vector = vector[0]
+                    
+                    # Prepare query parameters
+                    import numpy as np
+                    vector_blob = np.array(vector, dtype=np.float32).tobytes()
+                    threshold = float(self.config.distance_threshold)
+                    
+                    # Build native RediSearch query
+                    # Using VECTOR_RANGE to enforce threshold at DB level
+                    # syntax: @prompt_vector:[VECTOR_RANGE {radius} $blob]=>{$YIELD_DISTANCE_AS: vector_distance}
+                    
+                    base_query = f"@prompt_vector:[VECTOR_RANGE {threshold} $blob]=>{{$YIELD_DISTANCE_AS: vector_distance}}"
+                    
+                    # Add filters if present
+                    if filter_expression:
+                        # RedisVL filter expression string conversion is needed
+                        # Simplification: if we have filters, we might need to combine them
+                        # For now, we'll prefix them: (@filter) @vector:[...]
+                        filter_str = str(filter_expression)
+                        query_str = f"({filter_str}) {base_query}"
+                    else:
+                        query_str = base_query
+
+                    # Execute raw command
+                    # FT.SEARCH {index_name} {query} PARAMS 2 blob {vector_blob} SORTBY vector_distance ASC LIMIT 0 {num_results} DIALECT 2
+                    try:
+                        cmd = [
+                            "FT.SEARCH",
+                            self.config.name,  # Index name usually matches cache name
+                            query_str,
+                            "PARAMS", "2", "blob", vector_blob,
+                            "SORTBY", "vector_distance", "ASC",
+                            "LIMIT", "0", str(num_results),
+                            # DIALECT 2 is needed for vector search
+                            "DIALECT", "2"
+                        ]
+                        
+                        redis_client = await self._cache._get_async_redis_client()
+                        raw_results = await redis_client.execute_command(*cmd)
+                        
+                        # Parse raw results
+                        # [count, key1, [field, val, ...], key2, ...]
+                        count = raw_results[0]
+                        parsed_results = []
+                        
+                        for i in range(1, len(raw_results), 2):
+                            key = raw_results[i]
+                            fields_raw = raw_results[i+1]
+                            
+                            # Convert list [k, v, k, v] to dict
+                            doc = {
+                                "metadata": {}
+                            }
+                            
+                            for j in range(0, len(fields_raw), 2):
+                                # Decode bytes to str
+                                f_name = fields_raw[j].decode('utf-8') if isinstance(fields_raw[j], bytes) else fields_raw[j]
+                                f_val_raw = fields_raw[j+1]
+                                f_val = f_val_raw.decode('utf-8') if isinstance(f_val_raw, bytes) else f_val_raw
+                                
+                                if f_name == "vector_distance":
+                                    doc["vector_distance"] = float(f_val)
+                                elif f_name == "prompt":
+                                    doc["prompt"] = f_val
+                                elif f_name == "response":
+                                    doc["response"] = f_val
+                                elif f_name == "prompt_vector":
+                                    # Skip vector data in output
+                                    pass
+                                else:
+                                    # All other fields go into metadata
+                                    # Try to parse JSON if it looks like it?
+                                    # RedisVL might store simple types.
+                                    doc["metadata"][f_name] = f_val
+                            
+                            parsed_results.append(doc)
+                            
+                        return parsed_results
+                        
+                    except Exception as e:
+                        logger.error(f"Native vector search failed: {e}")
+                        # Fallback to redisvl if native fails (though unlikely)
+                        return await self._cache.acheck(
+                            prompt=prompt,
+                            num_results=num_results,
+                            return_fields=return_fields or ["response", "prompt", "metadata"],
+                            filter_expression=filter_expression,
+                        )
                 
                 cached_results = await self._retry_operation(_check)
                 
                 if cached_results and len(cached_results) > 0:
-                    # Enforce threshold manually (RedisVL sometimes returns results > threshold)
+                    # Double check distance (sanity check)
                     result = cached_results[0]
-                    
-                    # Check distance if available
                     if "vector_distance" in result:
                         distance = float(result["vector_distance"])
                         if distance > self.config.distance_threshold:
-                            logger.info(
-                                f"L2 Cache MISS (Distance filter): {distance:.4f} > {self.config.distance_threshold} "
-                                f"for prompt: '{prompt[:50]}...'"
-                            )
+                            # This should happen rarely with VECTOR_RANGE, but precision errors exist
+                            logger.info(f"L2 Cache MISS (Post-filter): {distance:.4f}")
                             self.metrics.record_miss()
                             return None
-
+                    
                     # Apply reranking if enabled
                     if self._reranker:
                         cached_results = await self._rerank_results(prompt, cached_results)
